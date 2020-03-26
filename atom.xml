@@ -4,7 +4,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN">
     <title type="text">iaronsec的小站</title>
     <subtitle type="html">MemE 是一个强大且可高度定制的 GoHugo 博客主题，专为个人博客设计。</subtitle>
-    <updated>2020-03-20T07:13:30+08:00</updated>
+    <updated>2020-03-26T19:35:07+08:00</updated>
     <id>https://iaronsec.github.io/</id>
     <link rel="alternate" type="text/html" href="https://iaronsec.github.io/" />
     <link rel="self" type="application/atom+xml" href="https://iaronsec.github.io/atom.xml" />
@@ -16,6 +16,474 @@
             </author>
     <rights>[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)</rights>
     <generator uri="https://gohugo.io/" version="0.65.3">Hugo</generator>
+        <entry>
+            <title type="text">协方差矩阵的理解</title>
+            <link rel="alternate" type="text/html" href="https://iaronsec.github.io/posts/covariance_matix/" />
+            <id>https://iaronsec.github.io/posts/covariance_matix/</id>
+            <updated>2020-03-26T19:29:56+08:00</updated>
+            <published>2020-03-26T18:45:16+08:00</published>
+            <author>
+                    <name>iaronsec</name>
+                    <uri>https://iaronsec.github.io/</uri>
+                    <email>iaronsec@gmail.com</email>
+                    </author>
+            <rights>[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)</rights>
+    
+    <summary type="html"><![CDATA[作者：史正 本文为Understanding the Covariance Matrix一文的翻译，同时也根据自身……]]></summary>
+            
+                <content type="html"><![CDATA[<p>作者：史正</p>
+<blockquote>
+<p>本文为<a href="https://janakiev.com/blog/covariance-matrix/">Understanding the Covariance Matrix</a>一文的翻译，同时也根据自身情况补充了一些内容。旨在个人深入理解协方差矩阵与线性变换和旋转之间的关系，预备后期进一步的理解主成分分析。</p>
+</blockquote>
+<h2 id="1-方差和协方差">1. 方差和协方差</h2>
+<blockquote>
+<p>在正式开始之前，我们先快速回顾一下方差、协方差以及两者之间的区别。</p>
+</blockquote>
+<ul>
+<li>方差：用来度量<strong>单个随机变量</strong>的<strong>离散程度</strong>或者<strong>变化情况</strong>（例如一群人中身高的变化）。</li>
+</ul>
+<p>$$
+\sigma_x^2 = \frac{1}{n-1}\sum_{i=1}^{n}(x_i - \bar{x})^2 \notag
+$$</p>
+<blockquote>
+<p>此处的 $x_i$ 表示变量的值， $n$ 表示样本的数量（例如人群中人的数量）， $\bar{x}$ 代表变量的平均值。</p>
+</blockquote>
+<ul>
+<li>协方差：用来度量<strong>两个变量</strong>之间的<strong>变化关系</strong>（例如人群中的身高和体重之间的关系）。</li>
+</ul>
+<p>$$
+\sigma(\boldsymbol{x}, \boldsymbol{y})=\frac{1}{n-1}\sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y}) \notag
+$$</p>
+<blockquote>
+<p>此处的 $x_i$ 和 $y_i$ 代表了两个变量的值，$n$ 代表样本的数量，$\bar{x}$ 和 $\bar{y}$ 两个变量的平均值。一个变量的方差 $\sigma_x^2$ 也可以表示为这个变量和自己的协方差 $\sigma(\boldsymbol{x}, \boldsymbol{y})$。</p>
+</blockquote>
+<h2 id="2-协方差矩阵covariance-matrix">2. 协方差矩阵（Covariance Matrix）</h2>
+<p>根据协方差的概念和公式，我们可以根据 $C_{i,j}=\sigma(x_i,x_j)$ 来计算出协方差矩阵 $C$ 的每一项的值，这里 $C\in R^{d\times d}$ 并且 $d$ 代表了随机变量的个数或者叫做变量的维度 (dimension)。根据协方差的定义，我不难得出 $\sigma(x_k,x_l)=\sigma(x_l,x_k)$ ，这也就意味着，协方差矩阵是一个**对称阵**，矩阵的对角线方向是变量的方差，其他的项是协方差。处于这个原因，协方差矩阵也被叫做**方差-协方差矩阵**。下面是计算公式的推导：</p>
+<p>假设有一个数据集构成一个矩阵 $\boldsymbol{X}\in R^{d\times n}$，$d$ 是变量的个数，$n$ 是样本的个数，则有有：
+$$
+\boldsymbol{X} = \left[\begin{matrix} \boldsymbol{x_1} \\ \boldsymbol{x_2} \\ \vdots \\ \boldsymbol{x_d} \end{matrix}\right] =<br>
+\left[\begin{matrix} x_{1,1} &amp; x_{1,2} &amp; \cdots &amp; x_{1,n} \\<br>
+x_{2,1} &amp; x_{2,2} &amp; \cdots &amp; x_{2,n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\<br>
+x_{d,1} &amp; x_{d,2} &amp; \cdots &amp; x_{d,n}  \end{matrix}\right], \boldsymbol{\bar{X}} = \left[\begin{matrix} \bar{x}_1 \\ \bar{x}_2 \\ \vdots \\ \bar{x}_d \end{matrix}\right]
+$$
+那协方差矩阵可以写为：
+$$
+C = \left[\begin{matrix}
+\sigma(\boldsymbol{x_1}, \boldsymbol{x_1}) &amp; \sigma(\boldsymbol{x_1}, \boldsymbol{x_2}) &amp; \cdots &amp; \sigma(\boldsymbol{x_1}, \boldsymbol{x_d})\\ \sigma(\boldsymbol{x_2}, \boldsymbol{x_1}) &amp; \sigma(\boldsymbol{x_2}, \boldsymbol{x_2}) &amp; \cdots &amp; \sigma(\boldsymbol{x_2}, \boldsymbol{x_d}) \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ \sigma(\boldsymbol{x_d}, \boldsymbol{x_1}) &amp; \sigma(\boldsymbol{x_d}, \boldsymbol{x_2}) &amp; \cdots &amp; \sigma(\boldsymbol{x_d}, \boldsymbol{x_d})
+\end{matrix} \right] \notag
+$$
+那么根据协方差的计算公式，每一项的协方差可以写为：
+$$
+C_{i,j}=\frac{1}{n-1}\sum_{k=1}^{n}(x_{i,k}-\bar{x}_i)(x_{j,k}-\bar{x}_j) \notag
+$$
+这里的 $i,j$ 分别代表 $\boldsymbol{X}$ 中的第 $i,j$ 个变量，$k$ 代表变量中第 $k$ 个样本值，把采样值减去平均值$\boldsymbol{x_i} - \bar{x}_i$这一步，相当于把数据移动到原点 ，我们称这一步为去中心化。下面我们把==去中心化的变量记为 $\boldsymbol{x_i}$，去中心化的数据集记为 $\boldsymbol{X}$==。把求和换成矩阵的形式得到：
+$$
+C_{i,j}=\frac{1}{n-1}\boldsymbol{x_i}\boldsymbol{x_j}^T \notag
+$$
+因此对于协方差矩阵，可以的得到：
+$$
+C = \frac{\boldsymbol{X}\boldsymbol{X}^T}{n-1} \notag
+$$
+这里的矩阵 $\boldsymbol{X}\boldsymbol{X}^T$ 是一个半正定矩阵，也就意味着协方差是一个半正定矩阵。</p>
+<blockquote>
+<p>正定矩阵：给定一个大小为 $n \times n$ 的实对称矩阵 $A$ ，若对于任意长度为 $n$ 的向量 $x$ ，有 $xA^Tx \ge0$ 恒成立，则矩阵$A$  是一个半正定矩阵。</p>
+</blockquote>
+<p>本文，为了便于可视化，我们把注意力集中在二维的情况，即有有两个变量 $d=2$ 的情形，理解了2维，便可以很好的理解更高维度的情况。二维数据的协方差矩阵可以得出：
+$$
+C=\left(\begin{matrix} \sigma(x,x) &amp; \sigma(x,y) \\ \sigma(y,x) &amp; \sigma(y,y ) \end{matrix}\right) \notag
+$$
+这里我们展示线性变换如何影响这类数据集。首先我们生产均值为0，方差为1的两组随机数，这类数据也叫做白噪声。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span> 
+
+<span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;ggplot&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+
+<span class="c1"># Normal distributed x and y vector with mean 0 and standard deviation 1</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>  <span class="c1"># x.shape (500,)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span> <span class="c1"># y.shape (500,)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="c1"># X.shape (2,500)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Generated Data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p><img src="/img/download.png" alt="X scatter"></p>
+<p>因为两列数据互不相关，它们的协方差矩阵也是单位阵。协方差矩阵可以表示为：
+$$
+C=\left(\begin{matrix} \sigma_x^2 &amp; 0 \\ 0 &amp; \sigma_y^2 \end{matrix}\right) \notag
+$$
+我们可以通过一下的代码检查结果的正确性</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># Covariance</span>
+<span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+  
+    <span class="n">xbar</span><span class="p">,</span> <span class="n">ybar</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="c1"># formula 1 </span>
+    <span class="n">F1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">xbar</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">ybar</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># formula 2</span>
+    <span class="n">F2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">xbar</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">ybar</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">F2</span>
+
+<span class="c1"># Covariance matrix</span>
+<span class="k">def</span> <span class="nf">cov_mat</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">])],</span> \
+                     <span class="p">[</span><span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">])]])</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>接着我们运行以下代码得到协方差矩阵：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># Calculate covariance matrix</span>
+<span class="n">C1</span> <span class="o">=</span> <span class="n">cov_mat</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># method 1   </span>
+<span class="n">C2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="c1"># methon 2</span>
+<span class="k">print</span><span class="p">(</span><span class="n">C2</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>得到：</p>
+<pre><code>[[ 1.05382151 -0.03627829]
+ [-0.03627829  0.94432561]]
+</code></pre><p>可以看到，对角线的的方差接近与1，其余的协方差接近于0。</p>
+<h2 id="3-数据的线性变换">3. 数据的线性变换</h2>
+<p>接下来，我们来看看线性变换是如何影响数据和协方差矩阵 $C$。首先我们把我们的数据乘一下的尺度矩阵（scaling matrix）：
+$$
+S = \left(\begin{matrix} s_x &amp; 0 \\ 0 &amp; s_y\end{matrix}\right) \notag
+$$
+结合3Blue1Brown的线性代数的本质，对于这个尺度矩阵的解读，可以理解为基向量由 $(1,0)$, $(0,1)$  变为了 $(s_x,0)$，$(0，s_y)$，意味着基向量进行了缩放，原始数据也随着尺度矩阵进行了缩放。从基变换的角度来考虑，我们是在我们的坐标系下，表示出 $(s_x,0)$，$(0，s_y)$为基向量的坐标系下的数据。根据协方差的计算，协方差矩阵变为：
+$$
+C=\left(\begin{matrix} (s_x\sigma_x)^2 &amp; 0 \\ 0 &amp; (s_y\sigma_y)^2 \end{matrix}\right) \notag
+$$
+因为方差为1，这也就意味着，我们可以通过计算 $S=\sqrt{C}$ 从协方差矩阵中分离出尺度矩阵，那么数据就会做 $Y=SX$ 的线性变换。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># Center the matrix at the origin</span>
+<span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span>  <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
+<span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span>  <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,:])</span>
+
+<span class="c1"># Scaling matrix</span>
+<span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">3.4</span>
+<span class="n">Scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">sx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">]])</span>
+
+<span class="c1"># Apply scaling matrix to X</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">Scale</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,:],</span> <span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Transformed Data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+<span class="c1"># Calculate covariance matrix</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">cov_mat</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>[[ 0.51637254 -0.08634233]
+ [-0.08634233 10.91640403]]
+</code></pre><p><img src="/img/download-1.png" alt="Scaled Data"></p>
+<p>我们可以看到，协方差的值和我们预计的非常接近，因为 $0.7^2 = 0.49,3.4^2=11.56$。当数据在x和y轴缩放的时候，这个结论是成立的，但是数据遇到更复杂的线性变换时候，协方差的变换是怎么样的呢？</p>
+<p>这里我们引入一个新的线性变换，旋转矩阵 $R$ ，并且最终的线性变换为先缩放后旋转的综合效果，即 $T = RS$。旋转为：
+$$
+R = \left(\begin{matrix} \cos(\theta) &amp; -\sin(\theta) \\ \sin(\theta) &amp; \cos(\theta) \end{matrix}\right) \notag
+$$
+这表述数据沿逆时针方向旋转 $\theta$ 角度。因此数据在 $T$ 的线性变换下变为 $Y=TX=RSX$。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># Scaling matrix</span>
+<span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">3.4</span>
+<span class="n">Scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">sx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">]])</span>
+
+<span class="c1"># Rotation matrix</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<span class="n">Rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
+
+<span class="c1"># Transformation matrix</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Scale</span><span class="p">)</span>
+
+<span class="c1"># Apply transformation matrix to X</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Transformed Data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">);</span>
+
+<span class="c1"># Calculate covariance matrix</span>
+<span class="k">print</span><span class="p">(</span><span class="n">cov_mat</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>[[ 3.19115506 -4.5465169 ]
+ [-4.5465169   8.24162151]]
+[[ 3.19115506 -4.5465169 ]
+ [-4.5465169   8.24162151]]
+</code></pre><p><img src="/img/download-4.png" alt="Y=RSX"></p>
+<p>这也就引出了一个问题，如何将一个协方差矩阵分解为用旋转矩阵和尺度矩阵来表达的形式呢？</p>
+<h2 id="4-协方差矩阵的特征分解">4. 协方差矩阵的特征分解</h2>
+<h3 id="41-特征向量与基变换">4.1 特征向量与基变换</h3>
+<p>特征分解可以帮助我们解决上一部分的问题，来揭示线性变换和协方差矩阵之间的联系。首先介绍什么是特征向量，特征向量是一个在线性变换之后只发生尺度的改变不发生旋转的向量，可以表示为：
+$$
+A\nu = \lambda\nu
+$$
+这里 $\nu$ 表示的线性变换 $A$ 的特征向量，而 $\lambda$ 代表对应的特征值。如果我们把所有的特征向量装进一个矩阵 $V$ 里面并且所有的特征值都作为矩阵 $L$ 对角线上面的项，可以得出一下公式：
+$$
+V^{-1}AV = L
+$$
+这里我们从线性变换的角度去考虑。首先明确特征向量的定义，其是在线性变换之后只发生了尺度的改变，因此也就是说，以特征向量为基向量的坐标系下，变形变换 $A$ 造成的效果只是使每一个基向量缩放，并且缩放的大小为每个特征向量对应的特征值，<strong>即特征向量为基向量的坐标系下发生了一个尺度矩阵 $L$ 的线性变换</strong>。那么$(2)$ 的左边，其实就是一个视角转换的问题，目的是把线性变换A从我们的坐标系的描述下，转换为基向量坐标系下面的描述。由于矩阵是从右向左进行运算，可以看出，因此把目光转到等式的左边。首先乘以 $V$ 代表从我们的视角下看特征向量坐标系下的坐标，再乘以 $A$ 则表示我们的视角下看基向量坐标系下发生的线性变换，最后再乘以 $V^{-1}$ 表示从特征向量坐标系下发生的线性变化。</p>
+<blockquote>
+<p>总结：$A$表示常见的变换，，两侧的$V$表示视角上的变换。</p>
+</blockquote>
+<h3 id="42-协方差矩阵的特征分解-eigen-decomposition">4.2 协方差矩阵的特征分解 (Eigen Decomposition)</h3>
+<p>因此我们求出协方差矩阵的特征值和特征向量，根据 $(2)$ 便可以得到如下公式：
+$$
+V^{-1}CV = L \notag
+$$
+稍加变换，即可以得到协方差矩阵的特征分解形式：
+$$
+C = VLV^{-1} \notag
+$$
+这里特征向量代表数据最大方差方向上的单位向量，而特征值代表此方向上方差的大小。这也就意味着，$V$ 代表了一个旋转矩阵，而 $\sqrt{L}$代表了尺度矩阵。从上面的等式我们就可以将协方差矩阵表示为：
+$$
+C = RSSR^{-1} \notag
+$$
+这里，转矩阵 $R=V$，尺度矩阵 $S=\sqrt{L}$。又 $T=RS$，$T^{T}=(RS)^T=S^TR^T=SR^T=SR^{-1}$。</p>
+<blockquote>
+<p>这里因为.$S$ 是对称阵，所以$S=S^T$，$R$是旋转矩阵具有正交性，因此 $R^T=R^{-1}$</p>
+</blockquote>
+<p>故有：
+$$
+C=TT^T
+$$
+因此为了计算协方差矩阵的线性变换，必须计算协方差矩阵的特征向量和特征值：$T=V\sqrt{L}$。现在我们尝试用代码实现特征根和特征向量的计算。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">C</span> <span class="o">=</span> <span class="n">cov_mat</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> 
+<span class="n">eVe</span><span class="p">,</span> <span class="n">eVa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+ 
+<span class="k">print</span><span class="p">(</span><span class="s2">&#34;The EigenValue is:&#34;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eVe</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&#34;The Scaling matrix is</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="n">Scale</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&#34;Eigen matrix V is:</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="n">eVa</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&#34;The rotation matrix R is:</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="n">Rot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">eVe</span><span class="p">,</span> <span class="n">eVa</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Transformed Data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>The EigenValue is: [0.71809175 3.30410666]
+The Scaling matrix is
+ [[0.7 0. ]
+ [0.  3.4]]
+Eigen matrix V is:
+ [[-0.86184493  0.50717188]
+ [-0.50717188 -0.86184493]]
+The rotation matrix R is:
+ [[-0.8660254  0.5      ]
+ [-0.5       -0.8660254]]
+</code></pre><p><img src="/img/download-2-5217480.png" alt="Add Eigen"></p>
+<p>首先特征根和尺度矩阵的基的值非常的，其次旋转矩阵根据three sigma rule特征向量方向上三倍的特征根开方围成的椭圆，可以包裹住99.7%的点。我们可以从协方差矩阵中计算出线性变换的矩阵 $T$ ，并且利用 $T^{-1}$ 来移除数据的相关性。即：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">C</span> <span class="o">=</span> <span class="n">cov_mat</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+
+<span class="c1"># Calculate eigenvalues</span>
+<span class="n">eVa</span><span class="p">,</span> <span class="n">eVe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+
+<span class="c1"># Calculate transformation matrix from eigen decomposition</span>
+<span class="n">R</span><span class="p">,</span> <span class="n">S</span> <span class="o">=</span> <span class="n">eVe</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eVa</span><span class="p">))</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+
+<span class="c1"># Transform data with inverse transformation matrix T^-1</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Uncorrelated Data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">);</span>
+
+<span class="c1"># Covariance matrix of the uncorrelated data</span>
+<span class="n">cov_mat</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>array([[1.00000000e+00, 9.21106878e-16],
+       [9.21106878e-16, 1.00000000e+00]])
+</code></pre><p><img src="/img/download-3.png" alt="Inverse"></p>
+<h2 id="5-从多元正态分布协方差公式的角度去理解特征分解">5. 从多元正态分布协方差公式的角度去理解特征分解</h2>
+<p>回到上面我们推导的协方差公式：
+$$
+C = \frac{\boldsymbol{X}\boldsymbol{X}^T}{n-1} \notag
+$$
+当 $\boldsymbol{X}$ 中的变量都是标准正态分布的时候，其方差其实<strong>单位阵</strong> $I\in R^{d\times d}$ ，也就说明了：
+$$
+I = \frac{\boldsymbol{X}\boldsymbol{X}^T}{n-1} \notag
+$$
+所以当数据进行了线性变换 $Y=TX=RSX$ 之后，其协方差矩阵为：
+$$
+C = \frac{RSX({RSX})^T}{n-1}= \frac{RSXX^TS^TR^T}{n-1}= RS\left(\frac{\boldsymbol{X}\boldsymbol{X}^T}{n-1}\right)SR^{-1}=RSSR^{-1}\notag
+$$</p>
+<h2 id="6-总结">6. 总结</h2>
+<p>结合5节和4.2节，可以清晰的看出，一个协方差矩阵可以分解为其<strong>特征向量</strong>构成的<strong>旋转矩阵</strong>和<strong>特征值</strong>构成的<strong>对角矩阵（尺度矩阵）</strong>，这两个矩阵对中心化和标准化后的独立数据集产生了作用，使得其产生了相关性。</p>
+<ul>
+<li>随便补充一个</li>
+</ul>
+<blockquote>
+<p>定理：实对称矩阵不同特征值对应的特征向量是正交的。</p>
+<p>证明：</p>
+<p>假设 $AP=\lambda_1P$ 和 $AQ=\lambda_2Q$，其中A是实对称矩阵，$\lambda_1,\lambda_2$ 为 $A$ 的不同特征值，$P,Q$ 分别代表对应的特征向量。则有：</p>
+<p>$P^T(AQ)=P^T(\lambda_2Q)=\lambda_2P^TQ $</p>
+<p>$(P^TA)Q=(P^T A^T)Q=(AP)^TQ=(\lambda_1P)^TQ=\lambda_1P^TQ $</p>
+<p>又因为 $P^T(AQ)=(P^TA)Q$ ，则有：</p>
+<p>$(\lambda_1 - \lambda_2) P^TQ = 0$</p>
+<p>又因为 $\lambda_1 \ne \lambda_2$</p>
+<p>所以 $P^TQ = 0$</p>
+<p>从而 $PQ$ 相互正交</p>
+</blockquote>
+<h2 id="参考链接">参考链接</h2>
+<p>[1] <a href="https://janakiev.com/blog/covariance-matrix/">Understanding the Covariance Matrix</a></p>
+<p>[2] <a href="https://zhuanlan.zhihu.com/p/37609917">如何直观地理解「协方差矩阵」？</a></p>
+]]></content>
+            
+            
+            
+            
+            
+                
+                    
+                
+                    
+                
+            
+        </entry>
+    
         <entry>
             <title type="text">失眠的夜</title>
             <link rel="alternate" type="text/html" href="https://iaronsec.github.io/posts/hello_meme/" />
